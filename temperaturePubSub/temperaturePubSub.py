@@ -22,7 +22,6 @@ import argparse
 import json
 import thermal_zone
 import ambient
-import subprocess
 
 AllowedActions = ['both', 'publish', 'subscribe']
 
@@ -128,10 +127,6 @@ am = ambient.Ambient(ambientChannelId, ambientWriteKey)
 # Publish to the same topic in a loop forever
 while True:
     if args.mode == 'both' or args.mode == 'publish':
-        # Get fan speed
-        fanSpeed = subprocess.check_output(['cat', '/sys/devices/pwm-fan/target_pwm']).decode('utf-8').rstrip('\n')
-        fanSpeed = 100 * int(fanSpeed) / 255
-
         # Get temperature
         zone_paths = thermal_zone.get_thermal_zone_paths()
         zone_names = thermal_zone.get_thermal_zone_names(zone_paths)
@@ -143,7 +138,6 @@ while True:
         message = {}
         for i, zone_name in enumerate(zone_names):
             message[zone_name] = zone_temps[i]
-        message['fanSpeed'] = fanSpeed
         messageJson = json.dumps(message)
 
         # Publish message to AWS
@@ -154,18 +148,7 @@ while True:
         # Publish message to Ambient
         ambientData = {}
         for i, zone_name in enumerate(zone_names):
-            if zone_name == 'AO-therm':
+            if zone_name == 'cpu-thermal':
                 ambientData['d1'] = zone_temps[i]
-            elif zone_name == 'CPU-therm':
-                ambientData['d2'] = zone_temps[i]
-            elif zone_name == 'GPU-therm':
-                ambientData['d3'] = zone_temps[i]
-            elif zone_name == 'PLL-therm':
-                ambientData['d4'] = zone_temps[i]
-            elif zone_name == 'PMIC-Die':
-                ambientData['d5'] = zone_temps[i]
-            elif zone_name == 'thermal-fan-est':
-                ambientData['d6'] = zone_temps[i]
-            ambientData['d7'] = fanSpeed
         r = am.send(ambientData)
-    time.sleep(10)
+    time.sleep(30)
