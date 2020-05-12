@@ -22,6 +22,7 @@ import argparse
 import json
 import thermal_zone
 import ambient
+import requests
 
 AllowedActions = ['both', 'publish', 'subscribe']
 
@@ -146,9 +147,12 @@ while True:
             print('Published topic %s: %s\n' % (topic, messageJson))
 
         # Publish message to Ambient
-        ambientData = {}
-        for i, zone_name in enumerate(zone_names):
-            if zone_name == 'cpu-thermal':
-                ambientData['d1'] = zone_temps[i]
-        r = am.send(ambientData)
+        try:
+            ambientData = {}
+            for i, zone_name in enumerate(zone_names):
+                if zone_name == 'cpu-thermal':
+                    ambientData['d1'] = zone_temps[i]
+            r = am.send(ambientData)
+        except requests.exceptions.RequestException as e:
+            print('request failed: ', e)
     time.sleep(30)
