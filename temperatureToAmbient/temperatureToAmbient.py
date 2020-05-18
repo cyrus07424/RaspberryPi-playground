@@ -5,8 +5,8 @@ import requests
 import time
 
 # Constants
-ambientChannelId = ''
-ambientWriteKey = ''
+ambientChannelId = 0
+ambientWriteKey = 'CHANGE ME'
 
 # Initialize Ambient
 am = ambient.Ambient(ambientChannelId, ambientWriteKey)
@@ -36,6 +36,10 @@ while True:
         # Get memory usage
         memory = psutil.virtual_memory()
         ambientData['d3'] = memory.percent
+        
+        # Get disk usage
+        disk = psutil.disk_usage('/')
+        ambientData['d4'] = disk.percent
 
         # Upload data to Ambient
         print(ambientData)
